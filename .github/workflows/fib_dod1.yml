@@ -1,4 +1,4 @@
-name: Zadanie 1 - FibCalc workflow
+name: Zadanie 1 (cz. dodatkowa 1) - FibCalc workflow
 
 on:
   workflow_dispatch:
