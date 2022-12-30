@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1
+
+# use platform that matches the current machine
+FROM --platform=$BUILDPLATFORM golang:1.17-alpine AS builder
+
+WORKDIR /app
+
+# download necessary Go modules
+COPY go.mod ./
+COPY go.sum ./
+RUN go mod download
+
+COPY templates ./templates 
+COPY *.go ./
+
+# declare target OS component and architecture with ARG to put it into local scope
+ARG TARGETOS TARGETARCH
+
+# extldflags and tags for creating statically linked executable
+# use GOOS and GOARCH environment variables to build app for target OS and architecture
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags '-w -extldflags "-static"' -tags netgo,osusergo -o /app/go-app
+
+FROM scratch
+WORKDIR /app
+COPY --from=builder /app/go-app .
+COPY --from=builder /app/templates ./templates 
+EXPOSE 8080
+
+ENTRYPOINT [ "./go-app" ]
